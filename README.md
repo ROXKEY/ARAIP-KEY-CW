@@ -3,7 +3,7 @@
 University of Hertfordshire · BEng (Hons) Robotics and Artificial Intelligence
 Module: Applied Robotics and AI Project (5FTC2068)
 Author: **Min Hein Khant** (individual project)
-
+ 
 This repository is my workspace for **Assignment 1**. It shows how I use **Git/GitHub** for version control and **Trello** for project management to plan, manage, maintain and back up my project.
 
 **Links**
