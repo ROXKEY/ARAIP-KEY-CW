@@ -6,8 +6,6 @@ Author: **Min Hein Khant** (individual project)
 
 This repository is my workspace for **Assignment 1**. It shows how I use **Git/GitHub** for version control and **Trello** for project management to plan, manage, maintain and back up my project.
 
-> _"If you fail to plan, you are planning to fail."_ – Benjamin Franklin
-
 **Links**
 
 | Tool | Link |
