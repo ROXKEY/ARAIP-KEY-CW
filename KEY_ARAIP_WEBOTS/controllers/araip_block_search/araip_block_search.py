@@ -1,14 +1,12 @@
 """ARAIP Part 2 - e-puck colour block search (red, green, blue) with a state machine.
 
 What it does
-------------
 The e-puck searches the arena for three coloured blocks. The whole camera image is
 scanned for each colour, so a block is noticed anywhere in the view. When a new colour
 is seen the robot turns towards it, drives up to it, reports it, then backs away and
 carries on until all three blocks are found (or SEARCH_TIMEOUT seconds have passed).
 
 State machine
--------------
 SEARCH   wander: drive forward with gentle random curves and obstacle avoidance,
          looking for an unseen colour
 SCAN     (optional, USE_SCAN_SPIN) spin on the spot every SCAN_INTERVAL seconds and look
@@ -17,12 +15,10 @@ LEAVE    after reporting a block: back up, turn away, return to SEARCH
 DONE     all blocks found (or timeout): stop and print the summary
 
 Two modes (set CAPTURE_MODE below)
-----------------------------------
 True  -> the robot stays still and saves one camera frame (FRAME_FILE) for the CNN
 False -> normal colour block search (the demo for Assignments 3 and 5)
 
 Block randomisation
--------------------
 At the start of every search run the three blocks are moved to new random positions
 inside the arena (see RANDOMISE_BLOCKS). This needs the E-puck's `supervisor` field set
 to TRUE in the scene tree. Blocks never overlap each other, the walls, the robot's start
@@ -38,15 +34,21 @@ import random
 import sys
 from controller import Supervisor
 
-# ======================= settings =======================
+# settings
 TIME_STEP = 32          # ms, simulation step
 MAX_SPEED = 6.28        # rad/s, e-puck wheel limit
 
-# --- obstacle avoidance ---
+# wheel speeds (fractions of MAX_SPEED)
+CRUISE_SPEED = 0.5      # normal driving forward / backward
+CURVE_INNER_SPEED = 0.1 # slow wheel when curving left or right
+APPROACH_SPEED = 0.4    # forward speed while steering towards a block
+STEER_GAIN = 1.5        # how strongly the robot turns to centre a block (per unit of x error)
+
+# obstacle avoidance
 DIST_LIMIT = 70.0       # averaged proximity value above this means "obstacle close"
 TIME_DELAY = 0.5        # seconds between obstacle decisions
 
-# --- colour detection (tune after testing) ---
+# colour detection (tune after testing)
 MIN_BRIGHT = 50         # strong channel must exceed this. Lit block faces are ~200 but
                         # shaded faces only ~60-80, so this must stay low
 DOMINANCE = 0.35        # the other two channels must be below this share of the strong one
@@ -54,7 +56,7 @@ MIN_FRACTION = 0.01     # a colour must cover >= 1% of the sampled pixels to cou
 SAMPLE_STEP = 2         # look at every 2nd pixel in x and y (4x faster, still reliable)
 ALL_COLOURS = ['red', 'green', 'blue']
 
-# --- search behaviour ---
+# search behaviour
 # Wandering: drive mostly straight, with a gentle random curve every few seconds. The camera
 # keeps looking while the robot moves, so no stopping to spin is needed.
 WANDER_STRAIGHT_TIME = (3.0, 6.0)   # s of straight driving between curves (random in range)
@@ -73,17 +75,19 @@ BACK_TIME = 1.0         # s reversing after a block is reported
 TURN_TIME = 1.2         # s turning away afterwards (about 135 degrees)
 SEARCH_TIMEOUT = 240.0  # s of simulated time before the run ends with a summary
 
-# --- CNN frame capture (Part 2) ---
+# CNN frame capture (Part 2)
 CAPTURE_MODE = False    # True: stay still and save a frame. False: normal block search
 CAPTURE_STEP = 20       # steps to wait so the camera has a valid image
 FRAME_FILE = "frame_car_60cm.png"   # change per test, e.g. "frame_car_40cm.png"
 SAVE_FOUND_FRAMES = True            # save found_<colour>.png when a block is identified
 
-# --- block randomisation (needs the E-puck 'supervisor' field set to TRUE) ---
+# block randomisation (needs the E-puck 'supervisor' field set to TRUE)
 RANDOMISE_BLOCKS = True
 RANDOM_SEED = None      # None = a new layout every run; an integer (e.g. 42) repeats a layout
 BLOCK_NAMES = {'red': 'red_block', 'green': 'green_block', 'blue': 'blue_block'}
 OBSTACLE_NAME = 'cnn_object'   # the CNN test box; blocks are kept clear of it (if present)
+CNN_BOX_RADIUS = 0.15   # m, half the CNN test box width (box is 0.3 x 0.3 m)
+CNN_BOX_MARGIN = 0.10   # m, extra free gap around the CNN test box
 WALL_MARGIN = 0.10      # m, free gap between a block edge and the arena wall
 BLOCK_GAP = 0.15        # m, free gap between two blocks
 ROBOT_CLEARANCE = 0.20  # m, free gap around the robot's start position
@@ -92,7 +96,7 @@ DEFAULT_BLOCK_SIZE = 0.3   # m, used if a block has no `size` field
 # state names
 SEARCH, SCAN, APPROACH, LEAVE, DONE = "SEARCH", "SCAN", "APPROACH", "LEAVE", "DONE"
 
-# ======================= robot setup =======================
+# robot setup
 robot = Supervisor()     # a Supervisor is a Robot that can also move other nodes (block randomisation)
 
 
@@ -125,7 +129,7 @@ H = cam.getHeight()
 seen = []               # colours already found, in order
 
 
-# ======================= sensing =======================
+# sensing
 def get_left_sensor():
     """True if something is close on the front left."""
     return (leftSensor1.getValue() + leftSensor2.getValue()) / 2.0 > DIST_LIMIT
@@ -184,30 +188,30 @@ def best_unseen(found):
     return max(candidates, key=lambda c: candidates[c][0])
 
 
-# ======================= movement =======================
+# movement
 def stop():
     leftMotor.setVelocity(0.0)
     rightMotor.setVelocity(0.0)
 
 
 def move_forward():
-    leftMotor.setVelocity(0.5 * MAX_SPEED)
-    rightMotor.setVelocity(0.5 * MAX_SPEED)
+    leftMotor.setVelocity(CRUISE_SPEED * MAX_SPEED)
+    rightMotor.setVelocity(CRUISE_SPEED * MAX_SPEED)
 
 
 def move_backward():
-    leftMotor.setVelocity(-0.5 * MAX_SPEED)
-    rightMotor.setVelocity(-0.5 * MAX_SPEED)
+    leftMotor.setVelocity(-CRUISE_SPEED * MAX_SPEED)
+    rightMotor.setVelocity(-CRUISE_SPEED * MAX_SPEED)
 
 
 def turn_left():
-    leftMotor.setVelocity(0.1 * MAX_SPEED)
-    rightMotor.setVelocity(0.5 * MAX_SPEED)
+    leftMotor.setVelocity(CURVE_INNER_SPEED * MAX_SPEED)
+    rightMotor.setVelocity(CRUISE_SPEED * MAX_SPEED)
 
 
 def turn_right():
-    leftMotor.setVelocity(0.5 * MAX_SPEED)
-    rightMotor.setVelocity(0.1 * MAX_SPEED)
+    leftMotor.setVelocity(CRUISE_SPEED * MAX_SPEED)
+    rightMotor.setVelocity(CURVE_INNER_SPEED * MAX_SPEED)
 
 
 def spin_in_place():
@@ -219,8 +223,8 @@ def spin_in_place():
 def steer_towards(x_centre):
     """Drive forward while turning so the block moves to the middle of the image."""
     error = x_centre - 0.5                       # negative: block on the left
-    base = 0.4 * MAX_SPEED
-    turn = 1.5 * error * MAX_SPEED
+    base = APPROACH_SPEED * MAX_SPEED
+    turn = STEER_GAIN * error * MAX_SPEED
     leftMotor.setVelocity(max(-MAX_SPEED, min(MAX_SPEED, base + turn)))
     rightMotor.setVelocity(max(-MAX_SPEED, min(MAX_SPEED, base - turn)))
 
@@ -242,7 +246,7 @@ def drive_with_avoidance(now, last_decision):
     return now
 
 
-# ======================= reporting =======================
+# reporting
 def print_summary(timed_out=False):
     missing = [c for c in ALL_COLOURS if c not in seen]
     print("----- Summary -----")
@@ -273,7 +277,7 @@ def save_frame():
     print("Full path:", os.path.abspath(FRAME_FILE))
 
 
-# ======================= block randomisation =======================
+# block randomisation
 def get_scene_children():
     """Return the world's top-level `children` field, or None if this robot is not a supervisor.
 
@@ -382,7 +386,7 @@ def randomise_blocks(seed=None):
         box = find_node(children, OBSTACLE_NAME)
         if box is not None:                                # keep clear of the CNN test box
             x, y, _ = box.getField('translation').getSFVec3f()
-            avoid.append((x, y, radius + 0.15 + 0.10))
+            avoid.append((x, y, radius + CNN_BOX_RADIUS + CNN_BOX_MARGIN))
 
         if seed is None:
             seed = RANDOM_SEED if RANDOM_SEED is not None else random.randrange(1000000)
@@ -404,7 +408,7 @@ def randomise_blocks(seed=None):
         return False
 
 
-# ======================= main loop =======================
+# main loop
 def main():
     start = robot.getTime()
     state = SEARCH
@@ -445,7 +449,7 @@ def main():
             state = DONE
             continue
 
-        # --- SEARCH and SCAN: look for a colour we have not reported yet ---
+        # SEARCH and SCAN: look for a colour we have not reported yet
         if state in (SEARCH, SCAN):
             candidate = best_unseen(analyse_image())
             if candidate:
@@ -477,7 +481,7 @@ def main():
                     move_forward()
                 last_avoid = drive_with_avoidance(now, last_avoid)
 
-        # --- APPROACH: steer to the block, identify it when close enough ---
+        # APPROACH: steer to the block, identify it when close enough
         elif state == APPROACH:
             found = analyse_image()
             if target in found:
@@ -510,7 +514,7 @@ def main():
                 state, last_scan = SEARCH, now
                 move_forward()
 
-        # --- LEAVE: back away from the block, turn, then carry on searching ---
+        # LEAVE: back away from the block, turn, then carry on searching
         elif state == LEAVE:
             elapsed = now - state_t0
             if elapsed < BACK_TIME:
