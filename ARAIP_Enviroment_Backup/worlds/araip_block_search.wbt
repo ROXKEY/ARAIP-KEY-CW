@@ -1,0 +1,66 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/gctronic/e-puck/protos/E-puck.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/solids/protos/SolidBox.proto"
+
+WorldInfo {
+}
+Viewpoint {
+  orientation -0.06299600410720929 0.9903881436742185 0.12313743677720394 0.9536540078599741
+  position -3.6713256003112047 -0.32233253675974854 5.0191702049265325
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 3 3
+}
+E-puck {
+  hidden position_0_0 593.2228922224956
+  hidden position_0_1 595.1509109462297
+  hidden linearVelocity_0 0.0001251607349478472 0.00010218920108971314 1.4290649801117054e-08
+  hidden angularVelocity_0 -0.006812586753208588 0.008344016351796725 1.921693546261269e-11
+  hidden rotation_1 0 1 0 2.6034733476144734
+  hidden linearVelocity_1 0.00016688036893316782 0.00013625176927266574 -2.085616126143763e-11
+  hidden angularVelocity_1 -0.006812586754589892 0.008344016353551793 2.0450086037267446e-10
+  hidden rotation_2 0 1 0 4.531492071348586
+  hidden linearVelocity_2 0.0001668803696086253 0.00013625176980818814 -2.1207746877042738e-11
+  hidden angularVelocity_2 -0.006812586754243169 0.008344016353907545 -1.6606939162013843e-10
+  translation 0.2688203381093458 0.1356649109917879 -6.396061353121894e-05
+  rotation -0.0002486261111534517 0.0006976214351038907 0.9999997257546573 0.6846996701293531
+  controller "araip_block_search"
+}
+SolidBox {
+  translation 0.8 0.6 0.05
+  name "red_block"
+  size 0.3 0.3 0.1
+  appearance PBRAppearance {
+    baseColor 1 0 0
+    roughness 1
+    metalness 0
+  }
+}
+SolidBox {
+  translation -0.7 0.9 0.05
+  name "blue_block"
+  size 0.3 0.3 0.1
+  appearance PBRAppearance {
+    baseColor 0 0 1
+    roughness 1
+    metalness 0
+  }
+}
+SolidBox {
+  translation 0.3 -0.9 0.05
+  name "green_block"
+  size 0.3 0.3 0.1
+  appearance PBRAppearance {
+    baseColor 0 1 0
+    roughness 1
+    metalness 0
+  }
+}

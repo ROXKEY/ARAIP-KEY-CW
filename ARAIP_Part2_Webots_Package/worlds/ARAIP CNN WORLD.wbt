@@ -1,0 +1,86 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/gctronic/e-puck/protos/E-puck.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/solids/protos/SolidBox.proto"
+
+WorldInfo {
+}
+Viewpoint {
+  orientation -0.005396921685329526 0.9998842434622197 0.014225783363556635 0.7258755857249422
+  position -4.073220896265654 -0.08742061277394161 3.3282664144735796
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 3 3
+}
+E-puck {
+  hidden translation_1 0 0.02600000000000016 0.02
+  hidden rotation_1 0 1 0 0.08326311611037768
+  hidden translation_2 0 -0.026 0.02
+  hidden rotation_2 0 -1 0 1.2014437178653579
+  translation 0.21566243750018294 -0.04218135308080917 -6.412429796465516e-05
+  rotation -0.0003680273962631755 -0.0014598787297861228 -0.9999988666543228 0.47298120648885045
+  controller "araip_block_search"
+  supervisor TRUE
+  camera_width 128
+  camera_height 128
+}
+SolidBox {
+  translation 0.8 0.6 0.05
+  name "red_block"
+  size 0.3 0.3 0.1
+  appearance PBRAppearance {
+    baseColor 1 0 0
+    roughness 1
+    metalness 0
+  }
+}
+SolidBox {
+  translation -0.7 0.9 0.05
+  name "blue_block"
+  size 0.3 0.3 0.1
+  appearance PBRAppearance {
+    baseColor 0 0 1
+    roughness 1
+    metalness 0
+  }
+}
+SolidBox {
+  translation 0.3 -0.9 0.05
+  name "green_block"
+  size 0.3 0.3 0.1
+  appearance PBRAppearance {
+    baseColor 0 1 0
+    roughness 1
+    metalness 0
+  }
+}
+Solid {
+  translation 1.33 1.29 -1
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColorMap ImageTexture {
+          url [
+            "textures/car.jpg"
+          ]
+        }
+        roughness 1
+        metalness 0
+      }
+      geometry Box {
+        size 0.3 0.3 0.3
+      }
+    }
+  ]
+  name "cnn_object"
+  boundingObject Box {
+    size 0.3 0.3 0.3
+  }
+}
